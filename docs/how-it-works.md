@@ -7,7 +7,8 @@
 3. For each account, turn users and groups into key sources.
 4. Fetch each source's keys. Every line must parse as an SSH public key;
    anything else (an HTML error page from a captive portal, say) counts as a
-   failed fetch.
+   failed fetch. Keys whose fingerprint is under `revoked` are dropped here,
+   including keys carried over during an outage.
 5. Write each account's block in `~/.ssh/authorized_keys`.
 6. Remove the block from accounts keytree managed before that no longer have
    an entry.

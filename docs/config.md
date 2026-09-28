@@ -34,6 +34,21 @@ servers:
       users: [backup-bot]
 ```
 
+### `revoked`
+
+Optional. Key fingerprints, in the `SHA256:...` form printed by
+`ssh-keygen -l` and logged by sshd. A key with one of these fingerprints is
+never written, whatever user or source it comes from (GitHub, GitLab or
+`keys:`), and it's removed from blocks on the next sync.
+
+```yaml
+revoked:
+  - SHA256:dx4kgXpncJoowp6ldMP090sbm7ZEMaAGF5uQwlnqKkU   # old laptop
+```
+
+Needs keytree v0.2.0 or later on every server. Keys added by hand outside
+keytree's block aren't affected.
+
 ### `version`
 
 Required. Must be `1`.
@@ -79,6 +94,7 @@ The whole file is rejected, and nothing on any server changes, if:
 - a `keys:` entry isn't exactly one valid SSH public key, or has options
   (`from=`, `command=`, ...)
 - a server pattern or account name isn't valid
+- a `revoked` entry isn't a `SHA256:` fingerprint
 
 `keytree check keytree.yaml` runs exactly these checks. Run it in CI on your
 config repo; [ragibkl/server-keys](https://github.com/ragibkl/server-keys/blob/main/.github/workflows/check.yml)
