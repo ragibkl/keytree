@@ -26,6 +26,21 @@ type File struct {
 	Users   map[string]User             `yaml:"users"`
 	Groups  map[string][]string         `yaml:"groups"`
 	Servers map[string]map[string]Grant `yaml:"servers"`
+	// Revoked lists key fingerprints (SHA256:...) that are never written,
+	// whatever source they come from.
+	Revoked []string `yaml:"revoked"`
+}
+
+// IsRevoked reports whether an authorized_keys line holds a revoked key.
+func (f *File) IsRevoked(line string) bool {
+	if len(f.Revoked) == 0 {
+		return false
+	}
+	pub, _, _, _, err := ssh.ParseAuthorizedKey([]byte(line))
+	if err != nil {
+		return false
+	}
+	return slices.Contains(f.Revoked, ssh.FingerprintSHA256(pub))
 }
 
 // User is a person and where their public keys come from.
@@ -44,6 +59,7 @@ type Grant struct {
 var (
 	nameRE    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
 	accountRE = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9._-]*$`)
+	revokedRE = regexp.MustCompile(`^SHA256:[A-Za-z0-9+/]{43}$`)
 	githubRE  = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$`)
 	gitlabRE  = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_.-]*$`)
 )
@@ -92,6 +108,12 @@ func (f *File) validate() error {
 	case Version:
 	default:
 		add("version %d is not supported (expected %d)", f.Version, Version)
+	}
+
+	for i, fp := range f.Revoked {
+		if !revokedRE.MatchString(fp) {
+			add("revoked[%d]: %q is not a key fingerprint (expected SHA256:..., as printed by ssh-keygen -l)", i, fp)
+		}
 	}
 
 	for _, name := range slices.Sorted(maps.Keys(f.Users)) {

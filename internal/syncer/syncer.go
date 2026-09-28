@@ -202,6 +202,13 @@ func (s *Syncer) linesFor(acct authkeys.Account, file *config.File, users []stri
 	seen := map[string]bool{}
 	var lines []string
 	add := func(key, comment string) {
+		if file.IsRevoked(key) {
+			if !seen[key] {
+				s.Log.Printf("%s: skipping revoked key (%s)", acct.Name, comment)
+			}
+			seen[key] = true
+			return
+		}
 		if seen[key] {
 			return
 		}

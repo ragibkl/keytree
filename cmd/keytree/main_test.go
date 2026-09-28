@@ -337,3 +337,60 @@ func TestLock(t *testing.T) {
 		t.Fatalf("got %d\n%s", code, out)
 	}
 }
+
+func fingerprint(t *testing.T, key string) string {
+	t.Helper()
+	pub, _, _, _, err := ssh.ParseAuthorizedKey([]byte(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return ssh.FingerprintSHA256(pub)
+}
+
+func TestSyncRevoked(t *testing.T) {
+	h := newHost(t)
+	good, bad := testKey(t), testKey(t)
+	h.gh.set("ragibkl", good+"\n"+bad+"\n")
+	h.gh.set("anasazmi571", testKey(t)+"\n")
+	h.config(baseConfig)
+	if code, out := h.run("sync"); code != 0 {
+		t.Fatalf("%d\n%s", code, out)
+	}
+	if !strings.Contains(h.keys("root"), bad) {
+		t.Fatal("setup: key missing before revoking")
+	}
+
+	// Revoking removes the key from every account on the next sync.
+	revoked := baseConfig + "revoked:\n  - " + fingerprint(t, bad) + "\n"
+	h.config(revoked)
+	code, out := h.run("sync")
+	if code != 0 || !strings.Contains(out, "skipping revoked key") {
+		t.Fatalf("%d\n%s", code, out)
+	}
+	if strings.Contains(h.keys("root"), bad) || !strings.Contains(h.keys("root"), good) {
+		t.Fatalf("root after revoke:\n%s", h.keys("root"))
+	}
+
+	// A revoked key is not carried over during an outage either.
+	h.gh.setDown("ragibkl", true)
+	os.RemoveAll(filepath.Join(h.root, "var/lib/keytree/cache"))
+	h.run("sync")
+	if strings.Contains(h.keys("root"), bad) || !strings.Contains(h.keys("root"), good) {
+		t.Fatalf("root after outage:\n%s", h.keys("root"))
+	}
+	h.gh.setDown("ragibkl", false)
+
+	// Literal keys are filtered too.
+	lit := strings.Replace(revoked, "ragib: {github: ragibkl}", "ragib:\n    keys: [\""+bad+"\"]", 1)
+	h.config(lit)
+	h.run("sync")
+	if strings.Contains(h.keys("root"), bad) {
+		t.Fatalf("literal revoked key written:\n%s", h.keys("root"))
+	}
+
+	// plan lists revocations.
+	h.config(revoked)
+	if _, out := h.run("plan"); !strings.Contains(out, "revoked: "+fingerprint(t, bad)) {
+		t.Fatalf("plan:\n%s", out)
+	}
+}

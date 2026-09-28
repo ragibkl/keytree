@@ -167,3 +167,28 @@ func TestParseLocal(t *testing.T) {
 		}
 	}
 }
+
+func TestRevoked(t *testing.T) {
+	k := testKey(t)
+	pub, _, _, _, err := ssh.ParseAuthorizedKey([]byte(k))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fp := ssh.FingerprintSHA256(pub)
+	f, err := Parse([]byte("version: 1\nrevoked:\n  - " + fp + "\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !f.IsRevoked(k) || !f.IsRevoked(k+" some comment") {
+		t.Fatal("revoked key not detected")
+	}
+	if f.IsRevoked(testKey(t)) {
+		t.Fatal("other key reported revoked")
+	}
+	for _, bad := range []string{"MD5:aa:bb", "SHA256:short", "ssh-ed25519 AAAA", fp + "="} {
+		_, err := Parse([]byte("version: 1\nrevoked: [\"" + bad + "\"]\n"))
+		if err == nil || !strings.Contains(err.Error(), "not a key fingerprint") {
+			t.Errorf("%q: got %v", bad, err)
+		}
+	}
+}

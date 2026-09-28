@@ -70,6 +70,7 @@ All of these are edits to `keytree.yaml`. Servers pick them up within the hour.
 | Use a new laptop | Add the key to your GitHub account. No edit needed. |
 | Give a friend access | Add them under `users`, then to a server's list. |
 | Take access away | Remove them from the lists. |
+| Block one key, keep the person | Add its fingerprint under `revoked` (see below). |
 | Add a new server | Install keytree on it. If an existing entry (like `"*"`) matches its hostname, that's all. |
 | See who can get into a server | `keytree plan --name <server> keytree.yaml` |
 | Check the file before pushing | `keytree check keytree.yaml` |
@@ -115,6 +116,27 @@ servers:
 
 Full reference: [docs/config.md](docs/config.md).
 
+## Blocking a single key
+
+Sometimes you want to shut out one key without touching the account it comes
+from: a lost laptop, or a key that's also used for something else (like
+pushing to git), so you can't just delete it from GitHub. Add its fingerprint
+under `revoked`:
+
+```yaml
+revoked:
+  - SHA256:dx4kgXpncJoowp6ldMP090sbm7ZEMaAGF5uQwlnqKkU   # old laptop
+```
+
+Get a fingerprint with `ssh-keygen -lf key.pub`; sshd also logs it on every
+login (`Accepted publickey for root ... SHA256:...`). The key is dropped on
+every server at the next sync, whichever user or source it comes from.
+
+Two limits: keytree can only remove keys from its own block, so a revoked key
+that was also added by hand outside the markers still works; and servers
+need keytree v0.2.0 or later (older versions reject the file, see
+[Upgrading](#upgrading)).
+
 ## Your existing keys are safe
 
 keytree only manages the lines between its own markers in
@@ -141,6 +163,14 @@ It only removes someone when your file says so.
 - **"no servers entry matches"**: the hostname (short form, before the first
   `.`) isn't in your file. Check with `hostname -s`.
 - **Last good sync**: `cat /var/lib/keytree/last-success`.
+
+## Upgrading
+
+Run the install command again. It replaces the program and keeps working the
+same way. Upgrade every server before using a feature a new version adds to
+`keytree.yaml` (like `revoked` in v0.2.0): older versions reject fields they
+don't know, and a server that rejects the file stops syncing until it's
+upgraded. It keeps the keys it has, so nobody is locked out.
 
 ## Uninstall
 

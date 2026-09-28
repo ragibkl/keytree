@@ -219,6 +219,9 @@ func cmdPlan(args []string, stdout, stderr io.Writer) int {
 		return syncer.ConfigError
 	}
 	fmt.Fprintf(stdout, "  matched: %s\n", strings.Join(access.Matched, ", "))
+	for _, fp := range file.Revoked {
+		fmt.Fprintf(stdout, "  revoked: %s (never written)\n", fp)
+	}
 	for _, account := range slices.Sorted(maps.Keys(access.Accounts)) {
 		users := access.Accounts[account]
 		if len(users) == 0 {
