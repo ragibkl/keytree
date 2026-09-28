@@ -38,24 +38,28 @@ That's enough to start. [More examples](#more-examples) below.
 On the server's console, as root, type:
 
 ```sh
-wget -qO- https://ragibkl.github.io/keytree/install | sh -s your-github-username
+wget -qO- https://ragibkl.github.io/keytree/install | sh -s URL
 ```
 
-`your-github-username` means `your-github-username/server-keys`. If your repo
-has another name, use `owner/repo`; for another branch, `owner/repo@branch`.
+where `URL` is the raw address of your `keytree.yaml`:
+
+```
+https://raw.githubusercontent.com/you/server-keys/main/keytree.yaml
+```
+
+(On GitHub, open the file and click **Raw** to get it.)
 
 The installer:
 
 1. puts the `keytree` program in `/usr/local/bin`
-2. saves your repo in `/etc/keytree/config.yaml`
+2. saves the URL in `/etc/keytree/config.yaml`
 3. adds an hourly cron job
 4. runs it once, so you can log in straight away
 
 Your server's **hostname** is how keytree finds its entry under `servers`, so
 set it before installing. If you can't, add `--name the-name-in-your-file`.
 
-No `wget`? `curl -fsSL https://ragibkl.github.io/keytree/install | sh -s your-github-username`
-works too.
+No `wget`? Use `curl -fsSL` in its place.
 
 ## Everyday use
 

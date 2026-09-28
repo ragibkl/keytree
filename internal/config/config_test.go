@@ -159,33 +159,11 @@ func TestParseLocal(t *testing.T) {
 	}
 	for src, want := range map[string]string{
 		"name: nas\n":                      "source is required",
-		"source: ftp://x/y\n":              "must be a URL",
+		"source: ftp://x/y\n":              "must be an https://",
 		"source: https://x\nlabels: [a]\n": "labels",
 	} {
 		if _, err := ParseLocal([]byte(src)); err == nil || !strings.Contains(err.Error(), want) {
 			t.Errorf("%q: got %v, want %q", src, err, want)
-		}
-	}
-}
-
-func TestExpandSource(t *testing.T) {
-	raw := "https://raw.githubusercontent.com/"
-	for in, want := range map[string]string{
-		"ragibkl":                    raw + "ragibkl/server-keys/main/keytree.yaml",
-		"ragibkl/infra":              raw + "ragibkl/infra/main/keytree.yaml",
-		"ragibkl/infra@prod":         raw + "ragibkl/infra/prod/keytree.yaml",
-		"ragibkl@dev":                raw + "ragibkl/server-keys/dev/keytree.yaml",
-		"https://example.com/k.yaml": "https://example.com/k.yaml",
-		"file:///srv/keytree.yaml":   "file:///srv/keytree.yaml",
-	} {
-		got, err := ExpandSource(in)
-		if err != nil || got != want {
-			t.Errorf("%q: got %q, %v; want %q", in, got, err, want)
-		}
-	}
-	for _, bad := range []string{"", "ftp://x", "a/b/c", "-bad", "a/b@../x", "a b"} {
-		if got, err := ExpandSource(bad); err == nil {
-			t.Errorf("%q: want error, got %q", bad, got)
 		}
 	}
 }

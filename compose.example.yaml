@@ -9,7 +9,7 @@ services:
       - --root=/host
       - --every=1h
       - --jitter=5m
-      - --source=<your-github-username>
+      - --source=https://raw.githubusercontent.com/you/server-keys/main/keytree.yaml
       # Required: inside a container the hostname is the container ID.
       - --name=my-server
     volumes:

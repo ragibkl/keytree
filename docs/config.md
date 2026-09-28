@@ -89,24 +89,18 @@ has a workflow you can copy.
 Written by the installer.
 
 ```yaml
-source: ragibkl
+source: https://raw.githubusercontent.com/ragibkl/server-keys/main/keytree.yaml
 # name: vmbr1-ubuntu-coder
 ```
 
 ### `source`
 
-Where the access file lives. Required.
+Where the access file lives. Required. Either:
 
-| Value | Means |
-|---|---|
-| `ragibkl` | `ragibkl/server-keys`, branch `main` |
-| `ragibkl/infra` | `ragibkl/infra`, branch `main` |
-| `ragibkl/infra@prod` | `ragibkl/infra`, branch `prod` |
-| `https://...` | any URL serving the file |
-| `file:///srv/keytree.yaml` | a local file, for example a git checkout you update yourself |
-
-GitHub forms fetch `https://raw.githubusercontent.com/<owner>/<repo>/<branch>/keytree.yaml`,
-so the repo must be public.
+- an `https://` URL, usually the raw GitHub address
+  (`https://raw.githubusercontent.com/<owner>/<repo>/<branch>/keytree.yaml`),
+  so the repo must be public; or
+- a `file://` path, for example a git checkout you update yourself.
 
 ### `name`
 

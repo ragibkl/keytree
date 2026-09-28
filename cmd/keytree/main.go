@@ -75,7 +75,7 @@ func (h *hostFlags) register(fs *flag.FlagSet) {
 	fs.StringVar(&h.root, "root", "/", "prefix for every host path: /etc/passwd, home directories, state and config defaults")
 	fs.StringVar(&h.config, "config", "", "local config file (default <root>/etc/keytree/config.yaml)")
 	fs.StringVar(&h.stateDir, "state-dir", "", "state and cache directory (default <root>/var/lib/keytree)")
-	fs.StringVar(&h.source, "source", "", "access file URL or GitHub owner[/repo][@branch], overriding the local config")
+	fs.StringVar(&h.source, "source", "", "access file URL, overriding the local config")
 	fs.StringVar(&h.name, "name", "", "server name, overriding the local config and hostname")
 	fs.StringVar(&h.githubURL, "github-url", "https://github.com", "GitHub base URL (for testing)")
 	fs.StringVar(&h.gitlabURL, "gitlab-url", "https://gitlab.com", "GitLab base URL (for testing)")
@@ -108,11 +108,9 @@ func (h *hostFlags) resolve() error {
 			}
 		}
 	}
-	src, err := config.ExpandSource(h.source)
-	if err != nil {
+	if err := config.CheckSource(h.source); err != nil {
 		return err
 	}
-	h.source = src
 	if h.name == "" {
 		host, err := os.Hostname()
 		if err != nil {

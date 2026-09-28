@@ -2,10 +2,10 @@
 # Install keytree on Alpine or Debian/Ubuntu: binary, local config, hourly
 # cron entry, then one sync.
 #
-#   wget -qO- https://ragibkl.github.io/keytree/install | sh -s <you>
+#   wget -qO- https://ragibkl.github.io/keytree/install | sh -s <url>
 #
-# <you> is where your keytree.yaml lives: a GitHub owner (meaning
-# <you>/server-keys), owner/repo, owner/repo@branch, or a full URL.
+# <url> is where your keytree.yaml lives, for example
+# https://raw.githubusercontent.com/<you>/server-keys/main/keytree.yaml
 #
 # Options:
 #   --name NAME      server name, if it isn't the short hostname
@@ -48,7 +48,7 @@ if [ -n "$uninstall" ]; then
   exit 0
 fi
 
-[ -n "$source_url" ] || [ -f "$CONFIG" ] || die "usage: sh -s <github-owner>[/repo][@branch] (or a URL)"
+[ -n "$source_url" ] || [ -f "$CONFIG" ] || die "usage: sh -s <url of your keytree.yaml>"
 
 # --- binary
 if [ -z "$binary" ]; then

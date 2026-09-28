@@ -181,8 +181,7 @@ type Local struct {
 	Name   string `yaml:"name"`
 }
 
-// ParseLocal decodes and validates a local config. Source is returned
-// expanded (see ExpandSource).
+// ParseLocal decodes and validates a local config.
 func ParseLocal(data []byte) (*Local, error) {
 	var l Local
 	if err := decodeStrict(data, &l); err != nil {
@@ -191,44 +190,18 @@ func ParseLocal(data []byte) (*Local, error) {
 	if l.Source == "" {
 		return nil, errors.New("local config: source is required")
 	}
-	src, err := ExpandSource(l.Source)
-	if err != nil {
+	if err := CheckSource(l.Source); err != nil {
 		return nil, fmt.Errorf("local config: %w", err)
 	}
-	l.Source = src
 	return &l, nil
 }
 
-// DefaultRepo is the config repo name assumed when a source names only a
-// GitHub owner.
-const DefaultRepo = "server-keys"
-
-var shortSourceRE = regexp.MustCompile(`^([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)(?:/([A-Za-z0-9._-]+))?(?:@([A-Za-z0-9._/-]+))?$`)
-
-// ExpandSource turns a short GitHub reference into the raw keytree.yaml URL,
-// so it is easy to type on a server console:
-//
-//	ragibkl                  -> ragibkl/server-keys, branch main
-//	ragibkl/infra            -> ragibkl/infra, branch main
-//	ragibkl/infra@prod       -> ragibkl/infra, branch prod
-//
-// https://, http:// and file:// URLs are returned unchanged.
-func ExpandSource(s string) (string, error) {
+// CheckSource accepts https://, http:// and file:// URLs.
+func CheckSource(s string) error {
 	for _, scheme := range []string{"https://", "http://", "file://"} {
 		if strings.HasPrefix(s, scheme) {
-			return s, nil
+			return nil
 		}
 	}
-	m := shortSourceRE.FindStringSubmatch(s)
-	if m == nil || strings.Contains(m[3], "..") {
-		return "", fmt.Errorf("source %q must be a URL (https://, file://) or a GitHub owner[/repo][@branch]", s)
-	}
-	owner, repo, ref := m[1], m[2], m[3]
-	if repo == "" {
-		repo = DefaultRepo
-	}
-	if ref == "" {
-		ref = "main"
-	}
-	return "https://raw.githubusercontent.com/" + owner + "/" + repo + "/" + ref + "/keytree.yaml", nil
+	return fmt.Errorf("source %q must be an https:// or file:// URL", s)
 }
