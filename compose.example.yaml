@@ -1,0 +1,22 @@
+# keytree as a container. It edits the host's authorized_keys, so it runs as
+# root and gets the host paths it needs under /host.
+services:
+  keytree:
+    image: ghcr.io/ragibkl/keytree:latest
+    restart: unless-stopped
+    command:
+      - sync
+      - --root=/host
+      - --every=1h
+      - --jitter=5m
+      - --source=<your-github-username>
+      # Required: inside a container the hostname is the container ID.
+      - --name=my-server
+    volumes:
+      - /etc/passwd:/host/etc/passwd:ro
+      # Home directories of the accounts keytree manages. Mount directories,
+      # not authorized_keys itself: keytree replaces the file on every change.
+      - /root:/host/root
+      - /home:/host/home
+      # Last-known-good keys, so a GitHub outage after a restart keeps access.
+      - /var/lib/keytree:/host/var/lib/keytree

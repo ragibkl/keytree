@@ -1,0 +1,39 @@
+# Serves install.sh at https://ragibkl.github.io/keytree/install, a URL
+# short enough to type on a server console.
+name: pages
+on:
+  push:
+    branches: [main]
+    paths: [install.sh, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: build site
+        run: |
+          mkdir _site
+          cp install.sh _site/install
+          cat > _site/index.html <<'EOF'
+          <!doctype html>
+          <meta http-equiv="refresh" content="0; url=https://github.com/ragibkl/keytree">
+          <a href="https://github.com/ragibkl/keytree">github.com/ragibkl/keytree</a>
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+      - id: deploy
+        uses: actions/deploy-pages@v4
