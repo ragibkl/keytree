@@ -166,8 +166,15 @@ It only removes someone when your file says so.
 
 ## Upgrading
 
-Run the install command again. It replaces the program and keeps working the
-same way. Upgrade every server before using a feature a new version adds to
+Run the installer again with no arguments. It replaces the program and keeps
+your `/etc/keytree/config.yaml`, including any `--name` you installed with:
+
+```sh
+wget -qO- https://ragibkl.github.io/keytree/install | sh
+```
+
+(Re-running it with a URL rewrites the config, and drops `--name` unless you
+pass it again.) Upgrade every server before using a feature a new version adds to
 `keytree.yaml` (like `revoked` in v0.2.0): older versions reject fields they
 don't know, and a server that rejects the file stops syncing until it's
 upgraded. It keeps the keys it has, so nobody is locked out.
