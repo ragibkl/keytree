@@ -210,3 +210,7 @@ Set `--name`, because inside a container the hostname is the container ID.
 - [docs/config.md](docs/config.md): config file reference and validation rules
 - [docs/how-it-works.md](docs/how-it-works.md): what a sync does, failure rules, file safety
 - [docs/development.md](docs/development.md): all commands and flags, building, testing
+
+## License
+
+[MIT](LICENSE)
